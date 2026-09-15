@@ -57,7 +57,8 @@ defineProps({ data: { type: Object, default: () => ({}) } })
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-@media (max-width: 768px) {
+/* A chart needs more horizontal room than an ordinary content card. */
+@media (max-width: 1200px) {
   .chart-row { grid-template-columns: 1fr; }
   .dashboard { padding: 8px; }
 }
