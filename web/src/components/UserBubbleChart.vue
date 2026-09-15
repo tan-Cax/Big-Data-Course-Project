@@ -20,7 +20,7 @@ function render() {
     tooltip: {
       formatter: p => `订单数: ${p.data[0]}<br/>总电量: ${p.data[1]} kWh<br/>均电量: ${p.data[2]} kWh`
     },
-    grid: { left: 50, right: 20, top: 20, bottom: 40 },
+    grid: { left: 12, right: 20, top: 25, bottom: 12, containLabel: true },
     xAxis: { name: '订单数', type: 'value', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
     yAxis: { name: '总充电量(kWh)', type: 'value', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
     series: [{

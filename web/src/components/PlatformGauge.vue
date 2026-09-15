@@ -28,6 +28,7 @@ function render() {
         itemStyle: { color: COLORS[d.platform] || '#888' },
       })),
       label: { color: '#e0e6ed', formatter: '{b}\n{c}单 ({d}%)' },
+      labelLayout: { hideOverlap: true, moveOverlap: 'shiftY' },
       emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } },
     }],
   }, true)

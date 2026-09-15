@@ -51,11 +51,6 @@ import PlatformGauge from '../components/PlatformGauge.vue'
 import EfficiencyRadar from '../components/EfficiencyRadar.vue'
 import CrossHeatmap from '../components/CrossHeatmap.vue'
 import WeekdayFacilityChart from '../components/WeekdayFacilityChart.vue'
-import LoadPredictionChart from '../components/LoadPredictionChart.vue'
-import ModelComparisonChart from '../components/ModelComparisonChart.vue'
-import VppRecommendationTable from '../components/VppRecommendationTable.vue'
-import BatteryHealthPanel from '../components/BatteryHealthPanel.vue'
-import OperationsIntelligencePanel from '../components/OperationsIntelligencePanel.vue'
 
 defineProps({ data: { type: Object, default: () => ({}) } })
 </script>
@@ -72,7 +67,8 @@ defineProps({ data: { type: Object, default: () => ({}) } })
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-@media (max-width: 768px) {
+/* A chart needs more horizontal room than an ordinary content card. */
+@media (max-width: 1200px) {
   .chart-row { grid-template-columns: 1fr; }
   .dashboard { padding: 8px; }
 }

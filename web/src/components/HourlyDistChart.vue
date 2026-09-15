@@ -17,8 +17,8 @@ function render() {
   if (!chart || !props.data.length) return
   chart.setOption({
     tooltip: { trigger: 'axis' },
-    grid: { left: 50, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'category', data: props.data.map(d => d.hour_of_day + ':00'), axisLabel: { color: '#8a9bc0', fontSize: 10 }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
+    grid: { left: 12, right: 12, top: 25, bottom: 12, containLabel: true },
+    xAxis: { type: 'category', data: props.data.map(d => d.hour_of_day + ':00'), axisLabel: { color: '#8a9bc0', fontSize: 10, interval: 1, rotate: 35, hideOverlap: true }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
     yAxis: [
       { type: 'value', name: 'kWh', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
       { type: 'value', name: '订单', axisLabel: { color: '#8a9bc0' }, splitLine: { show: false } },
