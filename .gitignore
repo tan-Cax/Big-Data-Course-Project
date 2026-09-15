@@ -50,3 +50,6 @@ nohup.out
 
 # MySQL
 *.sql.bak
+
+# 机器学习模型运行产物
+backend/ml/artifacts/

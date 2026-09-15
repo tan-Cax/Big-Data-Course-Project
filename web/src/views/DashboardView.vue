@@ -26,6 +26,16 @@
       <CrossHeatmap :data="data.hourlyStation" />
       <WeekdayFacilityChart :data="data.weekdayFacility" />
     </div>
+
+    <LoadPredictionChart :data="data.loadPrediction" />
+
+    <div class="chart-row">
+      <ModelComparisonChart :data="data.loadPrediction?.metrics" />
+      <VppRecommendationTable :data="data.loadPrediction?.vpp" />
+    </div>
+
+    <BatteryHealthPanel :data="data.batteryHealth" />
+    <OperationsIntelligencePanel :data="data.operations" />
   </div>
 </template>
 
