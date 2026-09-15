@@ -33,7 +33,7 @@ function render() {
   chart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: facilities, textStyle: { color: '#8a9bc0' }, top: 0 },
-    grid: { left: 50, right: 20, top: 40, bottom: 30 },
+    grid: { left: 12, right: 12, top: 50, bottom: 12, containLabel: true },
     xAxis: { type: 'category', data: weekdays, axisLabel: { color: '#8a9bc0' }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
     yAxis: { type: 'value', name: 'kWh', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
     series,

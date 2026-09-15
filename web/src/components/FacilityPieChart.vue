@@ -20,11 +20,12 @@ function render() {
   const total = props.data.reduce((s, d) => s + d.total_energy, 0)
   chart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} kWh ({d}%)' },
-    legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#8a9bc0' } },
+    legend: { orient: 'horizontal', left: 'center', bottom: 0, type: 'scroll', textStyle: { color: '#8a9bc0' } },
     series: [{
-      type: 'pie', radius: ['40%', '65%'], center: ['40%', '50%'],
+      type: 'pie', radius: ['35%', '58%'], center: ['50%', '45%'],
       data: props.data.map((d, i) => ({ name: d.facility_name, value: d.total_energy, itemStyle: { color: COLORS[i % COLORS.length] } })),
       label: { color: '#e0e6ed', formatter: '{b}\n{d}%' },
+      labelLayout: { hideOverlap: true, moveOverlap: 'shiftY' },
       emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } },
     }],
   }, true)

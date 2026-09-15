@@ -19,8 +19,9 @@ function render() {
   chart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: ['充电量(kWh)', '营收(元)'], textStyle: { color: '#8a9bc0' }, top: 0 },
-    grid: { left: 50, right: 20, top: 40, bottom: 30 },
-    xAxis: { type: 'category', data: dates, axisLabel: { color: '#8a9bc0', rotate: 45, fontSize: 10 }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
+    grid: { left: 12, right: 12, top: 45, bottom: 55, containLabel: true },
+    dataZoom: [{ type: 'inside' }, { type: 'slider', height: 14, bottom: 4, borderColor: '#2a3a5c', textStyle: { color: '#8a9bc0' } }],
+    xAxis: { type: 'category', data: dates, axisLabel: { color: '#8a9bc0', rotate: 35, fontSize: 10, hideOverlap: true }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
     yAxis: [
       { type: 'value', name: 'kWh', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
       { type: 'value', name: '元', axisLabel: { color: '#8a9bc0' }, splitLine: { show: false } },
@@ -49,5 +50,5 @@ window.addEventListener('resize', () => chart?.resize())
 <style scoped>
 .panel { background: rgba(16, 32, 64, 0.6); border: 1px solid rgba(64, 160, 255, 0.15); border-radius: 10px; padding: 16px; }
 .panel-title { font-size: 14px; font-weight: 600; color: #e0e6ed; margin-bottom: 8px; }
-.chart-container { width: 100%; height: 320px; }
+.chart-container { width: 100%; height: 480px; }
 </style>

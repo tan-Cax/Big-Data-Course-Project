@@ -18,7 +18,7 @@ function render() {
   chart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: ['充电量(kWh)', '订单数', '营收(元)'], textStyle: { color: '#8a9bc0' }, top: 0 },
-    grid: { left: 50, right: 20, top: 40, bottom: 30 },
+    grid: { left: 12, right: 12, top: 45, bottom: 12, containLabel: true },
     xAxis: { type: 'category', data: props.data.map(d => d.weekday), axisLabel: { color: '#8a9bc0' }, axisLine: { lineStyle: { color: '#2a3a5c' } } },
     yAxis: [
       { type: 'value', axisLabel: { color: '#8a9bc0' }, splitLine: { lineStyle: { color: '#1a2a4c' } } },
