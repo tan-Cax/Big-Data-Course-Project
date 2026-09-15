@@ -16,6 +16,9 @@ export function useApi() {
     efficiency: [],
     hourlyStation: [],
     weekdayFacility: [],
+    loadPrediction: { metrics: [], predictions: [] },
+    batteryHealth: { summary: {}, records: [] },
+    operations: { maintenance: [], recall: [], summary: {} },
   })
   const loading = ref(false)
   const lastUpdate = ref('')
@@ -36,7 +39,8 @@ export function useApi() {
     loading.value = true
     const [overview, dailyTrend, stationRanking, stationUtilization,
       hourlyDist, weekdayDist, facilityType, userBehavior,
-      platformDist, efficiency, hourlyStation, weekdayFacility] = await Promise.all([
+      platformDist, efficiency, hourlyStation, weekdayFacility, loadPrediction,
+      batteryHealth, operations] = await Promise.all([
       fetchJson('/api/overview'),
       fetchJson('/api/trend/daily'),
       fetchJson('/api/station/ranking'),
@@ -49,6 +53,9 @@ export function useApi() {
       fetchJson('/api/efficiency/radar'),
       fetchJson('/api/comparison/hourly-station'),
       fetchJson('/api/comparison/weekday-facility'),
+      fetchJson('/api/prediction/load'),
+      fetchJson('/api/prediction/battery-health'),
+      fetchJson('/api/prediction/operations'),
     ])
 
     if (overview) data.value.overview = overview
@@ -63,6 +70,9 @@ export function useApi() {
     if (efficiency) data.value.efficiency = efficiency
     if (hourlyStation) data.value.hourlyStation = hourlyStation
     if (weekdayFacility) data.value.weekdayFacility = weekdayFacility
+    if (loadPrediction) data.value.loadPrediction = loadPrediction
+    if (batteryHealth) data.value.batteryHealth = batteryHealth
+    if (operations) data.value.operations = operations
 
     lastUpdate.value = new Date().toLocaleString('zh-CN')
     loading.value = false

@@ -2,7 +2,7 @@ import sys
 import os
 import json
 import subprocess
-from datetime import datetime
+from datetime import date, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 import db
+from ml.schema import ensure_ml_tables
 
 app = Flask(__name__)
 CORS(app)
@@ -28,7 +29,7 @@ def rows_to_list(rows):
     for row in rows:
         d = {}
         for k, v in row.items():
-            if isinstance(v, datetime):
+            if isinstance(v, (date, datetime)):
                 d[k] = v.strftime('%Y-%m-%d')
             else:
                 d[k] = v
@@ -145,6 +146,102 @@ def api_comparison_weekday_facility():
         'FROM ads_weekday_facility_cross ORDER BY weekday_num, facility_type'
     )
     return success(rows_to_list(rows))
+
+
+@app.route('/api/prediction/load')
+def api_prediction_load():
+    ensure_ml_tables()
+    metrics = db.query_all(
+        'SELECT model_name, rmse, mae, r2, is_selected, training_rows, test_rows, trained_at '
+        'FROM ml_load_model_metrics ORDER BY rmse'
+    )
+    predictions = db.query_all(
+        'SELECT stat_date, data_type, actual_energy, predicted_energy '
+        'FROM ml_load_predictions ORDER BY stat_date'
+    )
+    vpp = db.query_all(
+        'SELECT stat_date, predicted_energy, load_level, action, recommended_shift_energy, reason '
+        'FROM ml_vpp_recommendations ORDER BY stat_date'
+    )
+    return success({
+        'metrics': rows_to_list(metrics),
+        'predictions': rows_to_list(predictions),
+        'vpp': rows_to_list(vpp),
+    })
+
+
+@app.route('/api/prediction/battery-health')
+def api_prediction_battery_health():
+    ensure_ml_tables()
+    rows = db.query_all(
+        'SELECT session_id, station_id, station_name, user_id, soh_reference, '
+        'voltage_delta, max_temperature, temperature_rise_rate, risk_level '
+        'FROM ml_battery_health '
+        "ORDER BY FIELD(risk_level, 'high', 'medium', 'low'), soh_reference LIMIT 100"
+    )
+    summary_rows = db.query_all(
+        'SELECT risk_level, COUNT(*) AS total FROM ml_battery_health GROUP BY risk_level'
+    )
+    summary = {row['risk_level']: row['total'] for row in summary_rows}
+    return success({'summary': summary, 'records': rows_to_list(rows)})
+
+
+@app.route('/api/prediction/operations')
+def api_prediction_operations():
+    ensure_ml_tables()
+    maintenance = db.query_all(
+        'SELECT station_id, station_name, health_score, total_sessions, high_risk_count, '
+        'medium_risk_count, overtemp_count, voltage_abnormal_count, priority, recommendation '
+        'FROM ml_maintenance_recommendations '
+        "ORDER BY FIELD(priority, 'high', 'medium', 'low'), health_score"
+    )
+    recall = db.query_all(
+        'SELECT user_id, last_charge_date, inactive_days, total_orders, total_energy, '
+        'recall_level, recall_message, analysis_date FROM ml_user_recall '
+        'ORDER BY inactive_days DESC, total_orders DESC LIMIT 100'
+    )
+    priority_rows = db.query_all(
+        'SELECT priority, COUNT(*) AS total FROM ml_maintenance_recommendations GROUP BY priority'
+    )
+    recall_rows = db.query_all(
+        'SELECT recall_level, COUNT(*) AS total FROM ml_user_recall GROUP BY recall_level'
+    )
+    return success({
+        'maintenance': rows_to_list(maintenance),
+        'recall': rows_to_list(recall),
+        'summary': {
+            'maintenance': {row['priority']: row['total'] for row in priority_rows},
+            'recall': {row['recall_level']: row['total'] for row in recall_rows},
+        },
+    })
+
+
+@app.route('/api/prediction/train', methods=['POST'])
+def api_prediction_train():
+    try:
+        script = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'ml',
+            'train_load_forecast.py',
+        )
+        result = subprocess.run(
+            [sys.executable, script],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+            env={**os.environ, 'PYTHONPATH': os.environ.get('PYTHONPATH', '')},
+        )
+        if result.returncode == 0:
+            return success({
+                'message': 'Load forecast training complete',
+                'output': result.stdout[-1000:],
+            })
+        return error(f'Model training failed: {result.stderr[-1000:]}')
+    except subprocess.TimeoutExpired:
+        return error('Model training timed out (600s)')
+    except Exception as exc:
+        return error(str(exc))
 
 
 @app.route('/api/reload', methods=['POST'])

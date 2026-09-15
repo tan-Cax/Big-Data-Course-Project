@@ -26,6 +26,16 @@
       <CrossHeatmap :data="data.hourlyStation" />
       <WeekdayFacilityChart :data="data.weekdayFacility" />
     </div>
+
+    <LoadPredictionChart :data="data.loadPrediction" />
+
+    <div class="chart-row">
+      <ModelComparisonChart :data="data.loadPrediction?.metrics" />
+      <VppRecommendationTable :data="data.loadPrediction?.vpp" />
+    </div>
+
+    <BatteryHealthPanel :data="data.batteryHealth" />
+    <OperationsIntelligencePanel :data="data.operations" />
   </div>
 </template>
 
@@ -41,6 +51,11 @@ import PlatformGauge from '../components/PlatformGauge.vue'
 import EfficiencyRadar from '../components/EfficiencyRadar.vue'
 import CrossHeatmap from '../components/CrossHeatmap.vue'
 import WeekdayFacilityChart from '../components/WeekdayFacilityChart.vue'
+import LoadPredictionChart from '../components/LoadPredictionChart.vue'
+import ModelComparisonChart from '../components/ModelComparisonChart.vue'
+import VppRecommendationTable from '../components/VppRecommendationTable.vue'
+import BatteryHealthPanel from '../components/BatteryHealthPanel.vue'
+import OperationsIntelligencePanel from '../components/OperationsIntelligencePanel.vue'
 
 defineProps({ data: { type: Object, default: () => ({}) } })
 </script>
