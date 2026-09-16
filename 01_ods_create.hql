@@ -43,7 +43,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ncs_ods.ods_charging_process (
 COMMENT '充电桩充电过程原始监测数据(ODS层)'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE
-LOCATION '/ncs/ods/ods_charging_process'
+LOCATION '/ncs/data/ods_charging_process'
 TBLPROPERTIES ('skip.header.line.count'='1');   -- 导入时跳过 CSV 首行英文表头
 
 -- =============================================================================
@@ -81,7 +81,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ncs_ods.ods_charging_order (
 COMMENT '充电桩充电订单原始交易数据(ODS层)'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE
-LOCATION '/ncs/ods/ods_charging_order'
+LOCATION '/ncs/data/ods_charging_order'
 TBLPROPERTIES ('skip.header.line.count'='1');
 
 -- =============================================================================
@@ -103,7 +103,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ncs_ods.ods_charging_station_meta (
 COMMENT '充电站及充电桩原始元数据(ODS层)'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE
-LOCATION '/ncs/ods/ods_charging_station_meta'
+LOCATION '/ncs/data/ods_charging_station_meta'
 TBLPROPERTIES ('skip.header.line.count'='1');
 
 -- =============================================================================

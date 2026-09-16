@@ -89,6 +89,17 @@ export function useApi() {
     loading.value = false
   }
 
+  async function trainModel() {
+    loading.value = true
+    try {
+      await fetch(`${API_BASE}/api/prediction/train`, { method: 'POST' })
+      await fetchAll()
+    } catch (e) {
+      console.warn('Model training failed:', e.message)
+    }
+    loading.value = false
+  }
+
   onMounted(() => {
     fetchAll()
     timer = setInterval(fetchAll, 10000)
@@ -98,5 +109,5 @@ export function useApi() {
     clearInterval(timer)
   })
 
-  return { data, loading, lastUpdate, fetchAll, reload }
+  return { data, loading, lastUpdate, fetchAll, reload, trainModel }
 }

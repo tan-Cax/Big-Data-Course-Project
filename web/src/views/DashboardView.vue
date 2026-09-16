@@ -27,6 +27,15 @@
       <WeekdayFacilityChart :data="data.weekdayFacility" />
     </div>
 
+    <!-- 机器学习分区标题 -->
+    <div class="section-title">
+      <span class="section-line"></span>
+      <span class="section-icon">⚡</span>
+      <span class="section-text">机器学习智能分析</span>
+      <span class="section-icon">⚡</span>
+      <span class="section-line"></span>
+    </div>
+
     <LoadPredictionChart :data="data.loadPrediction" />
 
     <div class="chart-row">
@@ -51,6 +60,11 @@ import PlatformGauge from '../components/PlatformGauge.vue'
 import EfficiencyRadar from '../components/EfficiencyRadar.vue'
 import CrossHeatmap from '../components/CrossHeatmap.vue'
 import WeekdayFacilityChart from '../components/WeekdayFacilityChart.vue'
+import LoadPredictionChart from '../components/LoadPredictionChart.vue'
+import ModelComparisonChart from '../components/ModelComparisonChart.vue'
+import VppRecommendationTable from '../components/VppRecommendationTable.vue'
+import BatteryHealthPanel from '../components/BatteryHealthPanel.vue'
+import OperationsIntelligencePanel from '../components/OperationsIntelligencePanel.vue'
 
 defineProps({ data: { type: Object, default: () => ({}) } })
 </script>
@@ -71,5 +85,30 @@ defineProps({ data: { type: Object, default: () => ({}) } })
 @media (max-width: 1200px) {
   .chart-row { grid-template-columns: 1fr; }
   .dashboard { padding: 8px; }
+}
+
+/* 机器学习分区标题 */
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(167, 139, 250, 0.4), transparent);
+}
+.section-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--purple);
+  letter-spacing: 2px;
+}
+.section-icon {
+  color: var(--purple);
+  font-size: 14px;
+  opacity: 0.8;
 }
 </style>

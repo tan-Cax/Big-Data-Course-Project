@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 import db
+from config import DATA_SOURCE
 from ml.schema import ensure_ml_tables
 
 app = Flask(__name__)
@@ -228,9 +229,9 @@ def api_prediction_train():
             [sys.executable, script],
             capture_output=True,
             text=True,
-            timeout=600,
+            timeout=900,
             cwd=os.path.dirname(os.path.abspath(__file__)),
-            env={**os.environ, 'PYTHONPATH': os.environ.get('PYTHONPATH', '')},
+            env={**os.environ, 'JAVA_HOME': os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-21-openjdk-amd64'), 'PYSPARK_PYTHON': sys.executable, 'PYSPARK_DRIVER_PYTHON': sys.executable, 'PYTHONPATH': os.environ.get('PYTHONPATH', '')},
         )
         if result.returncode == 0:
             return success({
@@ -239,7 +240,7 @@ def api_prediction_train():
             })
         return error(f'Model training failed: {result.stderr[-1000:]}')
     except subprocess.TimeoutExpired:
-        return error('Model training timed out (600s)')
+        return error('Model training timed out (900s)')
     except Exception as exc:
         return error(str(exc))
 
@@ -250,19 +251,98 @@ def api_reload():
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_jobs', 'run_analysis.py')
         result = subprocess.run(
             [sys.executable, script],
-            capture_output=True, text=True, timeout=300,
+            capture_output=True, text=True, timeout=600,
             cwd=os.path.dirname(os.path.abspath(__file__)),
-            env={**os.environ, 'PYTHONPATH': os.environ.get('PYTHONPATH', '')}
+            env={**os.environ, 'JAVA_HOME': os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-21-openjdk-amd64'), 'PYSPARK_PYTHON': sys.executable, 'PYSPARK_DRIVER_PYTHON': sys.executable, 'PYTHONPATH': os.environ.get('PYTHONPATH', '')}
         )
         if result.returncode == 0:
             return success({'message': 'Analysis complete', 'output': result.stdout[-500:]})
         else:
             return error(f'Analysis failed: {result.stderr[-500:]}')
     except subprocess.TimeoutExpired:
-        return error('Analysis timed out (300s)')
+        return error('Analysis timed out (600s)')
     except Exception as e:
         return error(str(e))
 
 
+def auto_run_all():
+    """
+    启动时自动串行执行：数据分析 → ML 模型训练
+    
+    由环境变量 NCS_AUTO_RUN 控制是否执行。
+    执行失败时打印警告但不退出，Flask 服务仍可启动。
+    
+    Returns:
+        bool: 是否全部执行成功
+    """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-21-openjdk-amd64')
+    python_bin = sys.executable
+    env = {
+        **os.environ,
+        'JAVA_HOME': java_home,
+        'PYSPARK_PYTHON': python_bin,
+        'PYSPARK_DRIVER_PYTHON': python_bin,
+        'PYTHONPATH': os.environ.get('PYTHONPATH', ''),
+    }
+    
+    print('\n' + '=' * 60)
+    print(f'[AUTO RUN] Data source: {DATA_SOURCE.upper()}')
+    print('[AUTO RUN] Running data analysis + ML training before server start...')
+    print('=' * 60 + '\n')
+    
+    # 1. 运行数据分析
+    analysis_script = os.path.join(base_dir, 'spark_jobs', 'run_analysis.py')
+    print('[AUTO RUN] Step 1/2: Data analysis...')
+    try:
+        result = subprocess.run(
+            [sys.executable, analysis_script],
+            capture_output=True, text=True, timeout=600,
+            cwd=base_dir, env=env,
+        )
+        if result.returncode == 0:
+            print('[AUTO RUN] Step 1/2: Data analysis ✓ success')
+        else:
+            print(f'[AUTO RUN] Step 1/2: Data analysis ✗ failed')
+            print(f'  Error: {result.stderr[-500:]}')
+            return False
+    except subprocess.TimeoutExpired:
+        print('[AUTO RUN] Step 1/2: Data analysis ✗ timed out (600s)')
+        return False
+    except Exception as exc:
+        print(f'[AUTO RUN] Step 1/2: Data analysis ✗ error: {exc}')
+        return False
+    
+    # 2. 运行 ML 训练
+    ml_script = os.path.join(base_dir, 'ml', 'train_load_forecast.py')
+    print('\n[AUTO RUN] Step 2/2: ML model training...')
+    try:
+        result = subprocess.run(
+            [sys.executable, ml_script],
+            capture_output=True, text=True, timeout=900,
+            cwd=base_dir, env=env,
+        )
+        if result.returncode == 0:
+            print('[AUTO RUN] Step 2/2: ML training ✓ success')
+        else:
+            print(f'[AUTO RUN] Step 2/2: ML training ✗ failed')
+            print(f'  Error: {result.stderr[-500:]}')
+            return False
+    except subprocess.TimeoutExpired:
+        print('[AUTO RUN] Step 2/2: ML training ✗ timed out (900s)')
+        return False
+    except Exception as exc:
+        print(f'[AUTO RUN] Step 2/2: ML training ✗ error: {exc}')
+        return False
+    
+    print('\n' + '=' * 60)
+    print('[AUTO RUN] All tasks completed successfully')
+    print('=' * 60 + '\n')
+    return True
+
+
 if __name__ == '__main__':
+    # 如果设置了 NCS_AUTO_RUN=true，启动前自动执行分析和训练
+    if os.environ.get('NCS_AUTO_RUN', 'false').lower() == 'true':
+        auto_run_all()
     app.run(host='0.0.0.0', port=5000, debug=False)

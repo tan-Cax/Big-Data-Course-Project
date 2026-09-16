@@ -14,7 +14,18 @@
           <tbody>
             <tr v-for="item in maintenance.slice(0, 10)" :key="item.station_id">
               <td>{{ item.station_name || item.station_id }}</td>
-              <td :class="{ 'score-alert': item.health_score <= 60 }">{{ item.health_score }}</td>
+              <td>
+                <div class="health-cell">
+                  <div class="health-bar">
+                    <div
+                      class="health-fill"
+                      :class="healthClass(item.health_score)"
+                      :style="{ width: `${Math.max(5, Math.min(100, Number(item.health_score) || 0))}%` }"
+                    ></div>
+                  </div>
+                  <span class="health-text">{{ Number(item.health_score).toFixed(1) }}</span>
+                </div>
+              </td>
               <td>{{ item.high_risk_count }}</td>
               <td><span class="badge" :class="item.priority">{{ priorityLabel(item.priority) }}</span></td>
               <td class="advice">{{ item.recommendation }}</td>
@@ -60,6 +71,12 @@ const recall = computed(() => props.data?.recall || [])
 const maintenanceSummary = computed(() => props.data?.summary?.maintenance || {})
 const recallSummary = computed(() => props.data?.summary?.recall || {})
 function priorityLabel(value) { return ({ high: '高', medium: '中', low: '低' })[value] || value }
+function healthClass(score) {
+  const s = Number(score) || 0
+  if (s >= 80) return 'good'
+  if (s >= 60) return 'medium'
+  return 'poor'
+}
 </script>
 
 <style scoped>
@@ -79,6 +96,37 @@ th, td { padding: 9px 8px; text-align: left; border-bottom: 1px solid rgba(64, 1
 th { color: #8a9bc0; font-weight: 500; }
 td { color: #d5dcec; }
 .advice { min-width: 190px; }
+
+/* 健康分进度条 */
+.health-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+.health-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(64, 160, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.health-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.health-fill.good { background: linear-gradient(90deg, #10b981, #34d399); }
+.health-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.health-fill.poor { background: linear-gradient(90deg, #ef4444, #f87171); }
+.health-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+  color: #d5dcec;
+}
+
 @media (max-width: 1000px) { .operations-grid { grid-template-columns: 1fr; } }
 @media (max-width: 768px) { .panel-header { flex-direction: column; } }
 </style>

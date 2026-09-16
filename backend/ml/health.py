@@ -28,7 +28,7 @@ def build_battery_health_rows(spark):
 
     readings = (
         monitoring
-        .withColumn('record_ts', F.to_timestamp(F.col('record_time').cast('string'), 'yyyyMMddHHmmss'))
+        .withColumn('record_ts', F.try_to_timestamp(F.col('record_time').cast('string'), F.lit('yyyyMMddHHmmss')))
         .withColumn('max_cell_voltage_num', F.col(max_voltage_column).cast('double'))
         .withColumn('min_cell_voltage_num', F.col(min_voltage_column).cast('double'))
         .withColumn('max_temperature_num', F.col(max_temperature_column).cast('double'))

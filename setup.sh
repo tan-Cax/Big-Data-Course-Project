@@ -20,7 +20,7 @@ step() { echo -e "\n${CYAN}========== $1 ==========${NC}"; }
 
 HADOOP_HOME=/opt/hadoop
 SPARK_HOME=/opt/spark
-JAVA_HOME=/opt/jdk8
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 PYTHON=python3.12
 DATA_DIR=/home/bit/data/04.数据集最终版
 PROJECT_DIR=/home/bit/data
@@ -37,7 +37,8 @@ echo "$PW" | sudo -S apt-get install -y -qq \
     > /dev/null 2>&1
 
 $PYTHON -m ensurepip --upgrade 2>/dev/null || true
-$PYTHON -m pip install --break-system-packages --upgrade pip setuptools wheel 2>&1 | tail -1
+$PYTHON -m pip install --break-system-packages --upgrade pip setuptools wheel 2>&1 | tail -1 || \
+$PYTHON -m pip install --upgrade pip setuptools wheel 2>&1 | tail -1
 
 log "系统依赖安装完成: $($PYTHON --version 2>&1)"
 
@@ -74,13 +75,21 @@ step "Step 3/7: 安装 Python 依赖"
 $PYTHON -m pip install --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple \
     flask flask-cors pymysql pandas 2>&1 | tail -3
 
-if $PYTHON -c "import pyspark" 2>/dev/null; then
+if $PYTHON -c "from pyspark.sql import SparkSession" 2>/dev/null; then
     log "PySpark 已可用"
 else
-    $PYTHON -m pip install --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple pyspark 2>&1 | tail -3
+    log "正在安装/重装 PySpark..."
+    $PYTHON -m pip install --break-system-packages --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple pyspark 2>&1 | tail -3
 fi
 
-$PYTHON -c "import flask, pymysql, pyspark; print('flask:', flask.__version__, '| pyspark:', pyspark.__version__)"
+$PYTHON -c "
+import flask, pymysql
+from pyspark.sql import SparkSession
+print('flask:', flask.__version__)
+print('pymysql:', pymysql.__version__)
+from pyspark import __version__ as _psv
+print('pyspark:', _psv)
+"
 log "Python 依赖安装完成"
 
 # =============================================================================
@@ -88,13 +97,13 @@ log "Python 依赖安装完成"
 # =============================================================================
 step "Step 4/7: 配置环境变量"
 
-export JAVA_HOME=/opt/jdk8
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export HADOOP_HOME=/opt/hadoop
 export SPARK_HOME=/opt/spark
 export PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$PATH
 
 cat > /tmp/ncs_env.sh << 'ENVEOF'
-export JAVA_HOME=/opt/jdk8
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export HADOOP_HOME=/opt/hadoop
 export SPARK_HOME=/opt/spark
 export PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$PATH
@@ -111,7 +120,7 @@ log "环境变量配置完成"
 # =============================================================================
 step "Step 5/7: 启动 HDFS 并上传数据"
 
-export JAVA_HOME=/opt/jdk8
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 
 $HADOOP_HOME/bin/hdfs namenode -format 2>/dev/null || true
 
@@ -120,11 +129,15 @@ sleep 5
 
 if $HADOOP_HOME/bin/hdfs dfsadmin -report &>/dev/null; then
     log "HDFS 启动成功"
-    $HADOOP_HOME/bin/hdfs dfs -mkdir -p /ncs/data 2>/dev/null || true
-    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/dsv13r2.csv" /ncs/data/ 2>/dev/null || true
-    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/nvv2t.csv" /ncs/data/ 2>/dev/null || true
-    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/nvv2t_md_end.csv" /ncs/data/ 2>/dev/null || true
-    log "数据上传到 HDFS /ncs/data/"
+    # 创建 ODS 层目录结构（与 01_ods_create.hql 的 LOCATION 保持一致）
+    $HADOOP_HOME/bin/hdfs dfs -mkdir -p /ncs/data/ods_charging_process 2>/dev/null || true
+    $HADOOP_HOME/bin/hdfs dfs -mkdir -p /ncs/data/ods_charging_order 2>/dev/null || true
+    $HADOOP_HOME/bin/hdfs dfs -mkdir -p /ncs/data/ods_charging_station_meta 2>/dev/null || true
+    # 上传 CSV 文件到对应的 ODS 目录
+    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/dsv13r2.csv" /ncs/data/ods_charging_process/ 2>/dev/null || true
+    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/nvv2t.csv" /ncs/data/ods_charging_order/ 2>/dev/null || true
+    $HADOOP_HOME/bin/hdfs dfs -put -f "$DATA_DIR/nvv2t_md_end.csv" /ncs/data/ods_charging_station_meta/ 2>/dev/null || true
+    log "数据上传到 HDFS /ncs/data/ods_*/"
     $HADOOP_HOME/bin/hdfs dfs -ls /ncs/data/
 else
     warn "HDFS 启动失败，后续使用本地文件模式"
@@ -165,7 +178,7 @@ echo -e "  Spark:      已安装 at $SPARK_HOME"
 echo -e "  Node.js:    $(node --version)"
 echo ""
 echo -e "  ${CYAN}数据库:${NC}   ncs_dashboard (root / root123)"
-echo -e "  ${CYAN}HDFS 数据:${NC} /ncs/data/"
+echo -e "  ${CYAN}HDFS 数据:${NC} /ncs/data/ods_*/"
 echo -e "  ${CYAN}后端目录:${NC} $PROJECT_DIR/backend/"
 echo ""
 echo -e "  ${YELLOW}下一步:${NC}"

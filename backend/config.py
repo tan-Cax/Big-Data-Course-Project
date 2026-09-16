@@ -11,7 +11,7 @@ MYSQL_CONFIG = {
 
 DATA_SOURCE = os.environ.get('NCS_DATA_SOURCE', 'local')
 
-HDFS_PATH = 'hdfs://localhost:9000/ncs/data'
+HDFS_PATH = os.environ.get('NCS_HDFS_PATH', 'hdfs://localhost:9000/ncs/data')
 LOCAL_PATH = '/home/bit/data/04.数据集最终版'
 
 SPARK_APP_HOME = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spark_jobs')
